@@ -1,0 +1,58 @@
+{
+  "name": "claude-sandbox",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  // Layout: the openab repo lives in ./openab; this .devcontainer wraps it.
+  // openab is a Rust workspace; Node provides the claude-agent-acp adapter.
+  // To enable Docker-in-Docker (openab ships several Dockerfiles), add:
+  //   "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  "features": {
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "default"
+    },
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  // NET_ADMIN/NET_RAW are required for the allowlist firewall (iptables/ipset).
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  // The firewall script reads its allowlist from this path so editing
+  // .devcontainer/allowed-domains.txt takes effect without an image rebuild.
+  "containerEnv": {
+    "ALLOWED_DOMAINS_FILE": "${containerWorkspaceFolder}/.devcontainer/allowed-domains.txt"
+  },
+  // Slack tokens are pulled from the HOST environment at container-up time, so
+  // no secret is stored in this file. Before `devcontainer up` (or before
+  // launching VS Code), run on your Mac:
+  //   export SLACK_BOT_TOKEN=xoxb-...   export SLACK_APP_TOKEN=xapp-...
+  // remoteEnv applies to lifecycle hooks, so start-openab.sh sees these.
+  "remoteEnv": {
+    "SLACK_BOT_TOKEN": "${localEnv:SLACK_BOT_TOKEN}",
+    "SLACK_APP_TOKEN": "${localEnv:SLACK_APP_TOKEN}"
+  },
+  // Named volumes keep the openab-* prefix on purpose: openab-config already
+  // holds the `claude auth login` credentials — renaming would orphan it and
+  // force a re-login. openab-config -> ~/.claude, openab-history -> shell history.
+  "mounts": [
+    "source=openab-config,target=/home/vscode/.claude,type=volume",
+    "source=openab-history,target=/commandhistory,type=volume"
+  ],
+  "remoteUser": "vscode",
+  // postCreate runs before the firewall (postStart), so it has full network.
+  // Installs the ACP adapter + Claude Code CLI, then builds the openab release
+  // binary that start-openab.sh launches.
+  "postCreateCommand": "npm install -g @anthropic-ai/claude-code @agentclientprotocol/claude-agent-acp && cd openab && cargo build --release",
+  // On every start: re-apply the firewall (iptables rules don't survive
+  // restarts), then auto-launch openab detached. start-openab.sh is
+  // best-effort — a missing binary or unset tokens just skip, never fail.
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh && bash /workspaces/claude-sandbox/.devcontainer/start-openab.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "anthropic.claude-code"
+      ]
+    }
+  }
+}

@@ -1,0 +1,3 @@
+[submodule "openab"]
+	path = openab
+	url = https://github.com/openabdev/openab

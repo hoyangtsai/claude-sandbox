@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Editor / OS cruft
+*.swp
+*~
+
+# Runtime logs (openab writes openab/openab.log)
+*.log
+
+# openab/ is tracked as a submodule; its build output (target/) and
+# local config.toml are excluded by openab's own .gitignore.

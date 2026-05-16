@@ -1,0 +1,57 @@
+# Firewall allowlist for the openab sandbox.
+#
+# One domain per line. Text after '#' is a comment. Domains are resolved to
+# IPv4 addresses; all other outbound traffic is dropped.
+#
+# After editing, re-apply without an image rebuild:
+#   sudo /usr/local/bin/init-firewall.sh
+
+# --- Discord (openab's primary bridge target) ---
+discord.com
+gateway.discord.gg
+cdn.discordapp.com
+media.discordapp.net
+
+# --- Anthropic API + OAuth login (for the Claude Code ACP backend) ---
+api.anthropic.com
+claude.ai
+console.anthropic.com
+
+# --- GitHub ---
+github.com
+api.github.com
+codeload.github.com
+objects.githubusercontent.com
+raw.githubusercontent.com
+ghcr.io
+pkg-containers.githubusercontent.com
+
+# --- Rust / crates.io ---
+crates.io
+static.crates.io
+index.crates.io
+sh.rustup.rs
+static.rust-lang.org
+
+# --- npm (Claude Code install) ---
+registry.npmjs.org
+
+# --- VS Code marketplace (best-effort: CDN sub-domains are dynamic) ---
+marketplace.visualstudio.com
+update.code.visualstudio.com
+
+# --- Debian apt mirrors ---
+deb.debian.org
+security.debian.org
+
+# --- Slack (Web API + Socket Mode WebSocket + file uploads) ---
+slack.com
+api.slack.com
+files.slack.com
+wss-primary.slack.com
+wss-backup.slack.com
+
+# --- Docker Hub + ghcr (uncomment if enabling docker-in-docker) ---
+# registry-1.docker.io
+# auth.docker.io
+# production.cloudflare.docker.com
