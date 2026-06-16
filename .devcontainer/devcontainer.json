@@ -3,6 +3,12 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  // Keep the container running after the VS Code window closes (default for a
+  // devcontainer.json build is "stopContainer"). openab stays up serving Slack
+  // in the background; stop it manually with `pkill -f 'openab run'` or
+  // `docker stop`. NOTE: a plain `docker start` won't re-run postStartCommand,
+  // so after a host reboot use `devcontainer up` to re-apply the firewall.
+  "shutdownAction": "none",
   // Layout: the openab repo lives in ./openab; this .devcontainer wraps it.
   // openab is a Rust workspace; Node provides the claude-agent-acp adapter.
   // To enable Docker-in-Docker (openab ships several Dockerfiles), add:
@@ -43,9 +49,11 @@
   // Installs the ACP adapter + Claude Code CLI, then builds the openab release
   // binary that start-openab.sh launches.
   "postCreateCommand": "npm install -g @anthropic-ai/claude-code @agentclientprotocol/claude-agent-acp && cd openab && cargo build --release",
-  // On every start: re-apply the firewall (iptables rules don't survive
-  // restarts), then auto-launch openab detached. start-openab.sh is
-  // best-effort — a missing binary or unset tokens just skip, never fail.
+  // On every start: apply the deny-by-default firewall FIRST (the sandbox
+  // containment), then auto-launch openab detached so the trust-all-tools
+  // agent never runs before the firewall is active. The `&&` ensures openab
+  // is skipped if the firewall fails to apply (fail-closed). start-openab.sh
+  // is best-effort — a missing binary or unset tokens just skip, never fail.
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh && bash /workspaces/claude-sandbox/.devcontainer/start-openab.sh",
   "customizations": {
     "vscode": {
