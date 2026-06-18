@@ -10,3 +10,5 @@
 
 # openab/ is tracked as a submodule; its build output (target/) and
 # local config.toml are excluded by openab's own .gitignore.
+
+.claude
